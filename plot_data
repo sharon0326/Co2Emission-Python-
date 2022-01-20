@@ -1,0 +1,396 @@
+# A program that contains several functions that helps to create graphs from
+# co2_emissions data of each country
+# Author: Sharon (Hetong) Shen 
+# ID: 260953511
+import doctest
+import matplotlib.pyplot as plt
+from add_continents import *
+from build_countries import *
+from data_cleanup import *
+def get_bar_co2_pc_by_continent(dic,integer):
+    '''
+    (dict, int) ->plot
+    
+    This function takes in a dictionary and an integer, and plot the data
+    regarding the continents to all the emissions of co2 of all the countries
+    that belong to the continent. The function returns the co2 emissions of
+    each continent.
+    
+    >>> d1 = get_countries_from_file("small_co2_data.tsv")
+    >>> get_bar_co2_pc_by_continent(d1, 2001)
+    [0.20320332558992543, 67.01626016260163, 7.6609004739336495, 1.4196063588190764]
+    
+    >>> d2 = get_countries_from_file("large_co2_data.tsv")
+    >>> data = get_bar_co2_pc_by_continent(d2, 2000)
+    >>> len(data)
+    6
+    >>> data[1] # ASIA
+    2.6980486411788904
+    >>> data[2] # EUROPE
+    8.007342839964073
+    >>> data[5] # S.AMERICA
+    2.3159155192465075
+    >>> data[0] # AFRICA
+    1.0975340644568221
+    >>> data[3] # N. AMERICA
+    14.739682155717826
+    >>> round(data[4], 5) # OCEANIA
+    12.66302
+    
+    >>> d3 = get_countries_from_file("anothertestfinalstep.tsv")
+    >>> data = get_bar_co2_pc_by_continent(d3, 2000)
+    >>> len(data)
+    5
+    >>> data[1] # AFRICA
+    0.0
+    >>> data[2] # EUROPE
+    0.0
+    '''
+    #getting the dictionary that maps the continent with country
+    empty =[]
+    for key in dic:
+        empty.append(dic[key])
+    dic_continents = Country.get_countries_by_continent(empty)
+    
+    x_axis = []
+    y_axis = []
+    #iterate through the continent dictionary, and sort the continent
+    #with alphabetical order
+    for continent in dic_continents:
+        #if "," not in continent:
+        x_axis.append(continent)
+        x_axis.sort()
+        
+    #get the co2 emission of all the countries in the continent
+    for cont2 in x_axis:
+        co2 = Country.get_total_co2_emissions_per_capita_by_year(dic_continents[cont2],integer)
+        y_axis.append(co2)
+    
+    #change the name of the x_axis
+    for i in range(len(x_axis)):
+        if x_axis[i] =="NORTH AMERICA":
+            x_axis[i] = "N.AMERICA"
+        if x_axis[i]=="SOUTH AMERICA":
+            x_axis[i] = "S.AMERICA"
+     
+    #plot and save the graph
+    plt.ylabel("co2(in tonnes)")
+    plt.title('CO2 emissions per capita in '+str(integer)+' by hetong.shen@mail.mcgill.ca')
+    plt.bar(x_axis, y_axis)
+    plt.savefig("co2_pc_by_continent_" + str(integer) + ".png")
+    return y_axis
+ 
+def get_bar_historical_co2_by_continent(dic,integer):
+    '''
+    (dict, int) ->plot
+    
+    This function takes in a dictionary and an integer, and plot the data
+    regarding the continents to all the historical emissions of co2 of all
+    the countries that belong to the continent up to the specific year.
+    The function returns the co2 emissions of each continent.
+    
+    >>> d1 = get_countries_from_file("small_co2_data.tsv")
+    >>> x = get_bar_historical_co2_by_continent(d1, 2015)
+    >>> x 
+    [4.877, 207.54500000000002, 359.367, 149.34300000000002]
+    >>> len(x)
+    4
+    
+    >>> d2 = get_countries_from_file("large_co2_data.tsv")
+    >>> data = get_bar_historical_co2_by_continent(d2, 1990)
+    >>> len(data)
+    6
+    >>> round(data[0],4) 
+    15827.808
+    >>> round(data[1],4) 
+    182635.553
+    >>> round(data[2],4) # EUROPE
+    334210.701
+    >>> round(data[3],4) 
+    273584.364
+    >>> round(data[4],4) # OCEANIA
+    8488.463
+    >>> round(data[5],4) 
+    15419.184
+    
+    >>> d2 = get_countries_from_file("large_co2_data.tsv")
+    >>> data = get_bar_historical_co2_by_continent(d2, 2018)
+    >>> len(data)
+    6
+    >>> round(data[0],4) 
+    44731.871
+    >>> round(data[1], 5) # ASIA
+    585465.903
+    >>> round(data[2],4) 
+    523681.833
+    >>> round(data[3],4) 
+    462809.679
+    >>> round(data[4], 5) # OCEANIA
+    19845.01
+    >>> round(data[5],4) 
+    40618.683
+    '''
+    #getting the dictionary that maps the continent with country
+    empty =[]
+    for key in dic:
+        empty.append(dic[key])
+    dic_continents = Country.get_countries_by_continent(empty)
+    
+    x_axis = []
+    y_axis = []
+    #iterate through the continent dictionary, and sort the continent
+    #with alphabetical order
+    for continent in dic_continents:
+        x_axis.append(continent)
+        x_axis.sort()
+        
+    #get the all the co2 emission of all the countries in the continent
+    for cont2 in x_axis:
+        co2 = Country.get_total_historical_co2_emissions(dic_continents[cont2],integer)
+        y_axis.append(co2)
+    
+    #change the name of the x_axis
+    for i in range(len(x_axis)):
+        if x_axis[i] =="NORTH AMERICA":
+            x_axis[i] = "N.AMERICA"
+        if x_axis[i]=="SOUTH AMERICA":
+            x_axis[i] = "S.AMERICA"
+     
+    #plot and save the graph
+    plt.ylabel("co2(in millions of tonnes)")
+    plt.title('Historical CO2 emissions up to '+str(integer)+' by hetong.shen@mail.mcgill.ca')
+    plt.bar(x_axis, y_axis)
+    plt.savefig("hist_co2_by_continent_" + str(integer) + ".png")
+    return y_axis
+ 
+def get_bar_co2_pc_top_ten(dic,integer):
+    '''
+    (dict, int) ->plot
+    
+    This function takes in a dictionary and an integer, and plot the data
+    regarding the top 10 emissions of co2 of all the countries in the file.
+    The function returns the co2 emissions of each continent.
+    
+    >>> d1 = get_countries_from_file("small_co2_data.tsv")
+    >>> data = get_bar_co2_pc_top_ten(d1, 2001)
+    >>> len(data)
+    5
+    
+    >>> data[0]
+    67.01626016260163
+    >>> data[1]
+    7.968406557717789
+    >>> data[2]
+    6.168578993821712
+    >>> data[3]
+    1.4196063588190764
+    >>> data[4]
+    0.20320332558992543
+    
+    >>> d2 = get_countries_from_file("large_co2_data.tsv")
+    >>> data = get_bar_co2_pc_top_ten(d2, 2000)
+    >>> len(data)
+    10
+    >>> data[0] 
+    58.388513513513516
+    >>> data[1] 
+    35.669432035737074
+    >>> data[2] 
+    28.261654135338347
+    >>> data[3] 
+    26.104645476772617
+    >>> data[4] 
+    21.288834407209247
+    >>> data[5] 
+    20.020642201834864
+    >>> data[6] 
+    18.757695343330703
+    >>> data[7] 
+    18.684026415587812
+    >>> data[8] 
+    18.44005055026065
+    >>> data[9] 
+    14.341511807975223
+    '''
+    dic_for_co2 ={}
+    for ISO in dic:
+        key  = dic[ISO]
+        dic_for_co2[key] = dic[ISO].get_co2_per_capita_by_year(integer)
+    
+    #remove all the none existent data in the dictionary, since they will
+    #not affect the result at all.
+    lis = []
+    for key in dic_for_co2:
+        if dic_for_co2[key] == None:
+            lis.append(key)
+    for ele in lis:
+        del dic_for_co2[ele]
+    
+    #get the top 10 country in the modified dict 
+    top_10 = Country.get_top_n(dic_for_co2,10)
+    
+    #get x and y axis from the tuples in the dic
+    x_axis = []
+    y_axis = []
+    for tup in top_10:
+        x_axis.append(tup[0])
+        y_axis.append(tup[1])
+    
+    #plot and save the graph
+    plt.ylabel("co2(in tonnes)")
+    plt.title('Top 10 countries for CO2 emissions pc in '+str(integer)+' by hetong.shen@mail.mcgill.ca')
+    plt.bar(x_axis, y_axis)
+    plt.savefig("top_10_co2_pc_" + str(integer) + ".png")
+    return y_axis
+ 
+def get_bar_top_ten_historical_co2(dic,integer):
+    '''
+    (dict, int) ->plot
+    
+    This function takes in a dictionary and an integer, and plot the data
+    regarding the top 10 historical emissions of co2 of all the countries
+    up to the specific year in the file.
+    The function returns the co2 emissions of each continent.
+    
+    >>> d1 = get_countries_from_file("small_co2_data.tsv")
+    >>> get_bar_top_ten_historical_co2(d1, 2015)
+    [306.696, 166.33, 149.34300000000002, 48.923, 41.215, 3.748, 3.324, 1.553, 0.0]
+    
+    >>> d2 = get_countries_from_file("large_co2_data.tsv")
+    >>> data = get_bar_top_ten_historical_co2(d2, 2018)
+    >>> len(data)
+    10
+    
+    >>> data[0]
+    404769.39699999994
+    >>> data[1]
+    210201.179
+    >>> data[2]
+    100720.35800000001
+    >>> data[3]
+    91300.31399999997
+    >>> data[4]
+    77448.89600000001
+    >>> data[5]
+    63517.21400000001
+    >>> data[6]
+    51196.387000000024
+    >>> data[7]
+    37952.874
+    >>> data[8]
+    32517.775000000034
+    >>> data[9]
+    27232.40300000002
+    '''
+    #get all the contries in a list
+    empty = []
+    for ISO in dic:
+        key  = dic[ISO]
+        empty.append(key)
+        
+    #get each country's historical emission by calling the static method
+    dic_for_co2 = Country.get_historical_co2_emissions(empty,integer)
+ 
+    #remove all the none existent data in the dictionary, since they will
+    #not affect the result at all.
+    lis = []
+    for key in dic_for_co2:
+        if dic_for_co2[key] == None:
+            lis.append(key)
+    for ele in lis:
+        del dic_for_co2[ele]
+    
+    #get the top 10 country in the modified dict 
+    top_10 = Country.get_top_n(dic_for_co2,10)
+    
+    #get x and y axis from the tuples in the dic
+    x_axis = []
+    y_axis = []
+    for tup in top_10:
+        x_axis.append(tup[0])
+        y_axis.append(tup[1])
+    
+    #plot and save the graph
+    plt.ylabel("co2(in millions of tonnes)")
+    plt.title('Top 10 countries for historical CO2 up to '+str(integer)+' by hetong.shen@mail.mcgill.ca')
+    plt.bar(x_axis, y_axis)
+    plt.savefig("top_10_hist_co2_" + str(integer) + ".png")
+    return y_axis
+def get_plot_co2_emissions(dic, lis_ISO, min_year, max_year):
+    '''
+    >>> d2 = get_countries_from_file("large_co2_data.tsv")
+    >>> data = get_plot_co2_emissions(d2, ["USA", "CHN", "RUS", "DEU", "GBR"], 1990, 2000)
+    >>> len(data)
+    5
+    >>> len(data[1]) # CHN
+    11
+    >>> data[0][:5] # USA
+    [5121.179, 5071.564, 5174.671, 5281.387, 5375.034]
+    >>> d2 = get_countries_from_file("large_co2_data.tsv")
+    
+    >>> data = get_plot_co2_emissions(d2, ["USA", "OWID_KOS"], 1800, 2000)
+    >>> len(data[0]) # USA
+    201
+    >>> data[0][4] # USA
+    0.333
+    >>> data[1][190] # OWID_KOS
+    0.0
+    >>> data[1][0] # OWID_KOS
+    0.0
+    
+    >>> data = get_plot_co2_emissions(d2, ["USA", "OWID_KOS"], 1986, 2000)
+    >>> len(data[0]) # USA
+    15
+    >>> data[0][0] # USA
+    4487.856
+    >>> data[1][0] # OWID_KOS
+    0.0
+    '''
+    #get the object country from ISO list in the same order
+    country =[]
+    for ISO in lis_ISO:
+        for key in dic:
+            if key == ISO:
+                country.append(dic[key])
+    
+    #calculate the co2 emission of each country in the range of min and max years
+    empty =[]
+    for count in country:
+        empty_sub= []
+        #get the calculation of each year for specific country
+        for year in range(min_year, max_year+1):
+            co2 = count.get_co2_emissions_by_year(year)
+            empty_sub.append(co2)
+        empty.append(empty_sub)
+    
+    #to plot the data with a total steps of 10 or 11
+    x_data = []
+    div = (max_year -min_year)//10
+    #add the max_year by 1 in order to handle the last year in the range
+    for x in range(min_year,max_year+1, div):
+        x_data.append(x)
+    
+    #get the according co2 value of these 10 to 11 steps
+    y_data = [] 
+    for count in country:
+        y_sub = []
+        #get the co2 in a nested list, for the specific country of year x
+        for x in x_data:
+            co2_year = count.get_co2_emissions_by_year(x)
+            y_sub.append(co2_year)
+        y_data.append(y_sub)
+    
+    #create different style for each line
+    style = ['1--b', '2-.g', '3-r','4:c','s-.m']
+    for i in range(len(y_data)):
+        plt.plot(x_data,y_data[i],style[i])
+        
+    #plot and save the graph    
+    plt.ylabel("co2(in millions of tonnes)")
+    plt.title('CO2 emissions between '+str(min_year)+' and '+str(max_year)+'by hetong.shen@mail.mcgill.ca')
+    plt.legend(lis_ISO)
+    plt.savefig("co2_emissions_" + str(min_year)+ "_"+ str(max_year)+ ".png") 
+    return empty
+ 
+if __name__=="__main__":
+    doctest.testmod()
