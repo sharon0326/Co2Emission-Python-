@@ -1,0 +1,157 @@
+# A program that contains two functions that add the continents to the
+# corresponding country in the given file, and create a dictionary that
+# maps the continents to ISO code
+# Author: Sharon (Hetong) Shen
+# ID: 260953511
+import doctest
+def get_iso_codes_by_continent(continents_filename):
+    '''
+    str -> dic
+    
+    This function takes the filename as input, and then maps the name of the
+    continent to the countries that belong to the continent. It returns dictionary
+    
+    >>> d = get_iso_codes_by_continent("iso_codes_by_continent.tsv")
+    >>> len(d['ASIA'])
+    50
+    >>> d['ASIA'][0]
+    'IDN'
+    
+    >>> len(d['NORTH AMERICA'])
+    23
+    >>> d['NORTH AMERICA'][0]
+    'CUB'
+ 
+    >>> len(d['SOUTH AMERICA'])
+    12
+    >>> d['SOUTH AMERICA'][0]
+    'URY'
+    
+    >>> len(d['EUROPE'])
+    48
+    >>> d['EUROPE'][2]
+    'BLR'
+    
+    >>> len(d['AFRICA'])
+    53
+    >>> d['AFRICA'][0]
+    'NGA'
+    
+    >>> len(d['OCEANIA'])
+    14
+    '''
+    #open the file, and slice each line into pieces
+    dic = {}
+    fobj = open(continents_filename, "r", encoding ="utf-8-sig")
+    #iterate through all the lines
+    for line in fobj:
+        #get the ISO before the first "\t"
+        for a in range(len(line)):
+            if line[a] == "\t":
+                ISO = line[:a]
+                break
+            else:
+                continue
+        
+        #get the name of continents
+        continent = line[a+1:].strip("\n")
+        continent = continent.upper()
+        
+        #check if the continent is alreay a key in the dic
+        if continent not in dic:
+            dic[continent] = [ISO]
+        else:
+            dic[continent].append(ISO)
+    return dic
+ 
+def add_continents_to_data(input_filename,continents_filename,output_filename):
+    '''
+    (str, str, str) -> int
+    
+    This function takes three strings of the filename, and returns the num of
+    lines of the content written to the last file.
+    The function insert the name of continent into the first input file in the
+    third column.
+    
+    >>> add_continents_to_data("anotherteststep2.tsv", "iso_codes_by_continent.tsv","anothertestfinalstep.tsv")
+    10
+    >>> add_continents_to_data("large_clean_co2_data.tsv", "iso_codes_by_continent.tsv","large_co2_data.tsv")
+    17452
+    >>> add_continents_to_data("teststep2.tsv", "iso_codes_by_continent.tsv","testfinalstep.tsv")
+    6
+    '''
+    dic = {}
+    #open the file
+    fobj = open(continents_filename, "r", encoding ="utf-8-sig")
+    #iterate through all the lines
+    for line in fobj:
+        
+        #get the ISO code by getting the letters before the first "\t"
+        for a in range(len(line)):
+            if line[a] == "\t":
+                ISO = line[:a]
+                break
+            else:
+                continue
+        
+        #convert the name of continent to upper letters
+        continent = line[a+1:].strip("\n")
+        continent = continent.upper()
+        
+        #check if the name of continent is already in dic
+        #this step is to create a dict that can easily check if the country
+        #belongs to multiple continent or not
+        if ISO not in dic:
+            dic[ISO] = [continent]
+        else:
+            dic[ISO].append(continent)
+    
+    #check if the country belongs to multiple continent, if so, then join
+    #those continents with comma
+    for key in dic:
+        if len(dic[key]) !=1:
+            dic[key] = [",".join(dic[key])]
+    
+    #open the file that contains the co2 and population information
+    fobj2 = open(input_filename, "r", encoding ="utf-8-sig")
+    num_line = 0
+    empty  = ''
+    for line2 in fobj2:
+        num_line+=1
+        
+        #slice the line in the file
+        for i in range(len(line2)):
+            #part 1 is the characters before the year (before digits)
+            #part 3 is the digital info that after the year
+            if line2[i] in [str(1), str(2)]:
+                part1 = line2[:i]
+                part3 = line2[i:]
+                
+                #get the ISO of the country, in order to map the country with continents
+                for a in range(len(line2)):
+                    if line2[a] == "\t":
+                        new_ISO = line2[:a]
+                        break
+                    else:
+                        continue
+                    
+                #getting the name of continents from the previous dictionary
+                part2 = dic[new_ISO][0]
+                #concatenate all three parts
+                empty += part1+part2+"\t"+part3
+                break
+            else:
+                continue
+    
+    #write the new content to the new file
+    fobj3 = open(output_filename, "w")
+    fobj3.write(empty)
+    
+    #close the file
+    fobj.close()  
+    fobj2.close()
+    fobj3.close() 
+    return num_line
+ 
+if __name__=="__main__":
+    doctest.testmod()
