@@ -1,0 +1,696 @@
+# A program that contains class Country and several instance, class, static
+# method that belongs to this class. The module also contains a file-processing
+# function that helps to convert the line in the .tsv file into object of
+# class Country
+# Author: Sharon (Hetong) Shen
+# ID: 260953511
+import doctest
+import copy
+ 
+#create a class Country
+class Country:
+    #set up the initial value of min and max year recorded in class attribute
+    #compare them with later values, and update them if necessary
+    min_year_recorded =3000
+    max_year_recorded =0
+    def __init__(self,str_ISO,str_name,lis_continents,int_year,float_co2=-1,int_pop=-1):
+        '''
+        (Country, str, str, list, int, float, int) -> Country
+        
+        This constructor takes in country, str, str, list, int, float, int as
+        input, and initiates the attributes of the object of class Country.
+        
+        >>> c=Country("QAT", "QATAR", ["ASIA"], 2001, 41.215, 615000)
+        >>> c.co2_emissions
+        {2001: 41.215}
+        >>> c=Country("QAT", "QATAR", ["ASIA"], 1961, 0.161, 51000)
+        >>> c.co2_emissions
+        {1961: 0.161}
+        
+        >>> b = Country("ALB", "Albania", ["EUROPE"], 2007, 3.924, 3034000)
+        >>> b.iso_code
+        'ALB'
+        >>> b.co2_emissions
+        {2007: 3.924}
+        
+        >>> r = Country("RUS", "Russia", ["ASIA", "EUROPE"], 2007, 1604.778, 14266000)
+        >>> r.population
+        {2007: 14266000}
+        >>> r.name
+        'Russia'
+        '''
+        #check if the input ISO code is valid, if not, then raise assertionerror
+        if str_ISO != "OWID_KOS" and len(str_ISO) != 3:
+            raise AssertionError("ISO is invalid")
+        else:
+            self.iso_code =str_ISO
+          
+        #create a deepcopy for list of continents
+        self.name = str_name
+        self.continents = copy.deepcopy(lis_continents)
+        
+        #check if the co2 has a value
+        self.co2_emissions = {}
+        if float_co2!= -1 and float_co2 != "\t":
+            self.co2_emissions[int_year] = float_co2
+        
+        #check if population has a value
+        self.population = {}
+        if int_pop!= -1 and int_pop != "\n":
+            self.population[int_year] = int_pop
+        
+        #update the min/max recorded year
+        if int_year >= Country.max_year_recorded:
+            Country.max_year_recorded = int_year
+        elif int_year <= Country.min_year_recorded:
+            Country.min_year_recorded = int_year
+    
+    def __str__(self):
+        '''
+        Country -> str
+        
+        This method takes in a object of Country, and prints out the object
+        in string.
+        
+        >>> b = Country("ALB", "Albania", ["EUROPE"], 2007, 3.924, 3034000)
+        >>> b.__str__()
+        'Albania\\tEUROPE\\t{2007: 3.924}\\t{2007: 3034000}'
+        
+        >>> c=Country("QAT", "QATAR", ["ASIA"], 2001, 41.215, 615000)
+        >>> c.__str__()
+        'QATAR\\tASIA\\t{2001: 41.215}\\t{2001: 615000}'
+        
+        >>> r = Country("RUS", "Russia", ["ASIA", "EUROPE"], 2007, 1604.778, 14266000)
+        >>> r.__str__()
+        'Russia\\tASIA,EUROPE\\t{2007: 1604.778}\\t{2007: 14266000}'
+        '''
+        #join the continents in the list
+        name = self.name
+        continents = ','.join(self.continents)
+        co2_dic = str(self.co2_emissions)
+        pop_dic = str(self.population)
+        #concatenate all the required info
+        return name+"\t"+continents+"\t"+co2_dic+"\t"+pop_dic
+    
+    def add_yearly_data(self, str_of_year_co2_pop):
+        '''
+        Country, str -> none
+        
+        The method takes in an object of type Country, and a string that
+        represents the year, co2 and population of that specific country
+        The method updates the pop and co2 attributes in the dictionary.
+        
+        >>> a = Country("AFG", "Afghnistan", ["ASIA"], 9, 0.015, 7663783)
+        >>> a.add_yearly_data("2018\\t9.439\\t37122000")
+        >>> a.co2_emissions == {9: 0.015, 2018: 9.439}
+        True
+        >>> a.population == {9: 7663783, 2018: 37122000}
+        True
+        
+        >>> b = Country("AFG", "Afghnistan", ["ASIA"], 1949, 0.015, 7663783)
+        >>> b.add_yearly_data("2018\\t9.439\\t")
+        >>> b.co2_emissions
+        {1949: 0.015, 2018: 9.439}
+        >>> b.population
+        {1949: 7663783}
+        
+        >>> c = Country("AFG", "Afghnistan", ["ASIA"], 1949, 0.015, 7663783)
+        >>> c.add_yearly_data("2018\\t\\t37122000")
+        >>> c.co2_emissions
+        {1949: 0.015}
+        >>> c.population
+        {1949: 7663783, 2018: 37122000}
+        
+        >>> d = Country("AFG", "Afghnistan", ["ASIA"], 1949, 0.015, 7663783)
+        >>> d.add_yearly_data("2018\\t\\t")
+        >>> d.co2_emissions
+        {1949: 0.015}
+        >>> d.population
+        {1949: 7663783}
+        >>> d.max_year_recorded
+        2018
+        >>> d.min_year_recorded
+        9
+        '''
+        #slice the string and get the year
+        year = int(str_of_year_co2_pop[:4])
+        new_str = str_of_year_co2_pop[5:]
+        
+        #iterate through the rest of the string besides the year
+        #get the co2 and pop by identifying the \t in string.
+        for i in range(len(new_str)):
+            if new_str[i] == "\t":
+                co2 = new_str[:i]
+                pop = new_str[i+1:]
+                
+                #make sure that the value of co2 and pop exists
+                #if not, then do not add it to the attribute of dictionary
+                if len(co2) != 0 and co2 != "\t":
+                    co2 = float(co2)
+                    self.co2_emissions[year]=co2
+                if len(pop) != 0 and pop != "\n":
+                    pop = int(pop)
+                    self.population[year]=pop
+                break
+            else:
+                continue
+            
+        #update the max and min yearly recorded value
+        if year >= Country.max_year_recorded:
+            Country.max_year_recorded = year
+        elif year <= Country.min_year_recorded:
+            Country.min_year_recorded = year
+            
+    def get_co2_emissions_by_year(self, integer):
+        '''
+        Country, int -> float
+        
+        The method takes in an onject of type country and an integer represent
+        the year, and it returns the yearly co2 emissions value in float
+        
+        >>> a = Country("AFG", "Afghnistan", ["ASIA"], 1949, 0.015, 7663783)
+        >>> a.add_yearly_data("2018\\t9.439\\t37122000")
+        >>> a.get_co2_emissions_by_year(1949)
+        0.015
+        >>> a.get_co2_emissions_by_year(2000)
+        0.0
+        >>> a.get_co2_emissions_by_year(2018)
+        9.439
+        
+        >>> b = Country("ALB", "Albania", ["EUROPE"], 2007, 3.924, 3034000)
+        >>> b.get_co2_emissions_by_year(1949)
+        0.0
+        >>> b.get_co2_emissions_by_year(2007)
+        3.924
+        
+        >>> c=Country("QAT", "QATAR", ["ASIA"], 2001, 41.215, 615000)
+        >>> c.add_yearly_data("2018\\t9.439\\t37122000")
+        >>> c.add_yearly_data("1244\\t9.000\\t370")
+        >>> c.get_co2_emissions_by_year(1244)
+        9.0
+        >>> c.get_co2_emissions_by_year(2001)
+        41.215
+        '''
+        #check if the year is in the dictionary of country.co2_emissions dict
+        if integer in self.co2_emissions:
+            return self.co2_emissions[integer]
+        #if not, returns 0.0
+        else:
+            return 0.0
+    
+    def get_co2_per_capita_by_year(self, integer):
+        '''
+        Country, int ->float
+        
+        The method takes in an object of country, and a integer represents the
+        year, then it returns the co2 emissions per capita by year
+        
+        >>> a = Country("AFG", "Afghnistan", ["ASIA"], 1949, -1, 7663783)
+        >>> a.add_yearly_data("2018\\t9.439\\t37122000")
+        >>> round(a.get_co2_per_capita_by_year(2018), 5)
+        0.25427
+        >>> print(a.get_co2_per_capita_by_year(1949))
+        None
+        
+        >>> b = Country("ALB", "Albania", ["EUROPE"], 2007, 3.924, 3034000)
+        >>> print(b.get_co2_per_capita_by_year(1949))
+        None
+        >>> b.get_co2_per_capita_by_year(2007)
+        1.2933421226104154
+        
+        >>> c=Country("QAT", "QATAR", ["ASIA"], 2001, 41.215, 615000)
+        >>> c.add_yearly_data("2018\\t9.439\\t37122000")
+        >>> c.add_yearly_data("1244\\t9.000\\t370")
+        >>> c.get_co2_per_capita_by_year(1244)
+        24324.324324324323
+        >>> c.get_co2_per_capita_by_year(2001)
+        67.01626016260163
+        '''
+        #check if there is a valid value for co2_emission by year
+        if self.get_co2_emissions_by_year(integer) == 0.0:
+            return None
+        
+        #calculate co2 per capita by dividing the population
+        co2_in_million = self.get_co2_emissions_by_year(integer)
+        co2 = co2_in_million * 1000000
+        per_capita = co2 /self.population[integer]
+        return per_capita
+    
+    def get_historical_co2(self, integer):
+        '''
+        Country, int -> float
+        
+        This method takes in an object of Country, and returns the co2 emission
+        up to the year recorded. This method returns a float.
+        
+        >>> q = Country("QAT", "Qatar", ["ASIA"], 2007, 62.899, 1218000)
+        >>> q.add_yearly_data("1993\\t30.985\\t501000")
+        >>> q.add_yearly_data("1989\\t14.292\\t462000")
+        >>> q.get_historical_co2(2000)
+        45.277
+        >>> q.get_historical_co2(2007)
+        108.176
+        
+        >>> c=Country("QAT", "QATAR", ["ASIA"], 2001, 41.215, 615000)
+        >>> c.add_yearly_data("2018\\t9.439\\t37122000")
+        >>> c.add_yearly_data("1244\\t9.000\\t370")
+        >>> c.get_historical_co2(1000)
+        0.0
+        >>> c.get_historical_co2(2001)
+        50.215
+        
+        >>> b = Country("ALB", "Albania", ["EUROPE"], 2007, 3.924, 3034000)
+        >>> b.get_historical_co2(2000)
+        0.0
+        '''
+        sum_co2 = 0.0
+        #get the year up to the required integer
+        for year in self.co2_emissions:
+            if year <= integer:
+                sum_co2 += self.co2_emissions[year]
+        return sum_co2
+    
+    @classmethod
+    def get_country_from_data(cls, string):
+        '''
+        Class, str -> Country
+        
+        This classmethod takes in class, and a string, and after it slice
+        the string, the method returns a new object of class Country.
+        
+        >>> a = Country.get_country_from_data("ALB\\tAlbania\\tEUROPE\\t1991\\t4.283\\t3280000")
+        >>> a.__str__()
+        'Albania\\tEUROPE\\t{1991: 4.283}\\t{1991: 3280000}'
+        >>> a.continents
+        ['EUROPE']
+        
+        >>> f = Country.get_country_from_data("QAT\\tQatar\\tASIA\\t2007\\t62.899\\t1218000")
+        >>> f.__str__()
+        'Qatar\\tASIA\\t{2007: 62.899}\\t{2007: 1218000}'
+        
+        >>> c=Country.get_country_from_data("ABC\\tEFG\\tASIA\\t2001\\t\\t")
+        >>> c.__str__()
+        'EFG\\tASIA\\t{}\\t{}'
+        '''
+        #get the iso, name,continents,year,co2,pop from the string
+        lis = string.split("\t")
+        
+        ISO,name,year,co2,pop = lis[0],lis[1],int(lis[3]),lis[4],lis[5]
+        contin = lis[2].split(",")
+        continents = contin
+ 
+        #check if the input is valid, or if it is an empty column
+        if len(co2) == 0 or co2 == "\t":
+            co2 = -1
+        else:
+            co2 = float(co2)
+            
+        if len(pop) == 0 or pop == "\n":
+            pop = -1
+        else:
+            pop = int(pop)
+        
+        #create a new object
+        return cls(ISO,name,continents,year,co2, pop)
+    
+    @staticmethod
+    def get_countries_by_continent(lis_countries):
+        '''
+        list-> dict
+        
+        This static method takes a list of countries as input, and map the
+        continents that the countries belong to countries in the list. The
+        method returns a dict.
+        
+        >>> a = Country("AFG", "Afghanistan", ["ASIA"], 1949, 0.015, 7663783)
+        >>> a.add_yearly_data("2018\\t9.439\\t37122000")
+        >>> b = Country("ALB", "Albania", ["EUROPE"], 2007, 3.924, 3034000)
+        >>> r = Country("RUS", "Russia", ["ASIA", "EUROPE"], 2007, 1604.778, 14266000)
+        >>> c = [a, b, r]
+        >>> d = Country.get_countries_by_continent(c)
+        >>> str(d['ASIA'][1])
+        'Russia\\tASIA,EUROPE\\t{2007: 1604.778}\\t{2007: 14266000}'
+        
+        >>> x = [a, r]
+        >>> y = Country.get_countries_by_continent(x)
+        >>> str(y['ASIA'][1])
+        'Russia\\tASIA,EUROPE\\t{2007: 1604.778}\\t{2007: 14266000}'
+        >>> 
+        'Afghanistan\\tASIA\\t{1949: 0.015, 2018: 9.439}\\t{1949: 7663783, 2018: 37122000}'
+        
+        >>> str(y['EUROPE'][0])
+        'Russia\\tASIA,EUROPE\\t{2007: 1604.778}\\t{2007: 14266000}'
+        '''
+        dic = {}
+        for country in lis_countries:
+            #check if the continents is already in the dict
+            #if yes, then append it
+            #if not, then create a new key for it
+            for continent in country.continents:
+                if continent not in dic:
+                    dic[continent] = [country]
+                else:
+                    dic[continent].append(country)
+        return dic
+    
+    @staticmethod
+    def get_total_historical_co2_emissions(lis_countries, integer):
+        '''
+        list, int -> float
+        
+        This static method takes a list of countries, and an int as input,
+        and it returns the co2 emissions of all the countries up the the
+        year of integer.
+        
+        >>> b = Country("ALB", "Albania", ["EUROPE"], 2007, 3.924, 3034000)
+        >>> r = Country("RUS", "Russia", ["ASIA", "EUROPE"], 2007, 1604.778, 14266000)
+        >>> q = Country("QAT", "Qatar", ["ASIA"], 2007, 62.899, 1218000)
+        >>> b.add_yearly_data("1991\\t4.283\\t3280000")
+        >>> q.add_yearly_data("1993\\t30.985\\t501000")
+        >>> q.add_yearly_data("1989\\t14.292\\t462000")
+        >>> c = [b, r, q]
+        >>> Country.get_total_historical_co2_emissions(c,2007)
+        1721.161
+        >>> Country.get_total_historical_co2_emissions(c,2000)
+        49.56
+        
+        >>> Country.get_total_historical_co2_emissions(c,1000)
+        0.0
+        
+        >>> Country.get_total_historical_co2_emissions(c,10000)
+        1721.161
+        '''
+        sum_of_all_country = 0
+        #iterate through all the countries
+        for country in lis_countries:
+            #get the co2 of each country, and then add them together
+            country_co2 = country.get_historical_co2(integer)
+            sum_of_all_country+=country_co2
+        return sum_of_all_country
+            
+    @staticmethod
+    def get_total_co2_emissions_per_capita_by_year(lis_countries, integer):
+        '''
+        list, int -> float
+        
+        This staticmethod takes a list of countries and an integer represents
+        the year, and it returns all the co2 for all the countries up to
+        that year.
+        
+        >>> b = Country("ALB", "Albania", ["EUROPE"], 2007, 3.924, 3034000)
+        >>> r = Country("RUS", "Russia", ["ASIA", "EUROPE"], 2007, 1604.778, 14266000)
+        >>> c = [b, r]
+        >>> round(Country.get_total_co2_emissions_per_capita_by_year(c,2007), 5)
+        92.98855
+        
+        >>> e = Country("ALB", "Albania", ["EUROPE"], 2007, 0, 3034000)
+        >>> f = Country("RUS", "Russia", ["ASIA", "EUROPE"], 2007, 0, 14266000)
+        >>> g = [e, f]
+        >>> Country.get_total_co2_emissions_per_capita_by_year(g,2007)
+        0.0
+        
+        >>> h = Country("ALB", "Albania", ["EUROPE"], 2007, 3.924, 0)
+        >>> i = Country("RUS", "Russia", ["ASIA", "EUROPE"], 2007, 3.9, 0)
+        >>> z = [h, i]
+        >>> Country.get_total_co2_emissions_per_capita_by_year(z,2007)
+        0.0
+        
+        >>> x = Country("ALB", "Albania", ["EUROPE"], 2007, 3.924, 3034000)
+        >>> y = Country("RUS", "Russia", ["ASIA", "EUROPE"], 2007, 3.9,-1)
+        >>> a = [x, y]
+        >>> round(Country.get_total_co2_emissions_per_capita_by_year(a,2007),5)
+        1.29334
+        
+        >>> q = Country("ALB", "Albania", ["EUROPE"], 2007, 3.924, -1)
+        >>> w = Country("RUS", "Russia", ["ASIA", "EUROPE"], 2007, -1, 12412125)
+        >>> o = [q, w]
+        >>> round(Country.get_total_co2_emissions_per_capita_by_year(o,2007),5)
+        0.0
+        '''
+        sum_co2_million = 0
+        sum_pop = 0
+        
+        #iterate through all the countries in the list
+        for country in lis_countries:
+            #check if the info is available to calculate co2 per capita
+            if integer in country.co2_emissions and country.population:
+                sum_co2_million +=country.co2_emissions[integer]
+                sum_pop += country.population[integer]
+                
+        if float(sum_co2_million) ==0.0 or sum_pop == 0:
+            return 0.0
+        
+        #calculate per capita by dividing the total sum with population
+        sum_co2 = sum_co2_million*1000000
+        per_capita_by_year = sum_co2 /sum_pop
+        return per_capita_by_year
+         
+    @staticmethod
+    def get_co2_emissions_per_capita_by_year(lis_countries, integer):
+        '''
+        list, int -> dict
+        
+        This static method takes list of countries and an int represents
+        the year as input. It returns a dictionary that map the year with
+        the emissions.
+        
+        >>> b = Country("ALB", "Albania", ["EUROPE"], 2007, 3.924, 3034000)
+        >>> r = Country("RUS", "Russia", ["ASIA", "EUROPE"], 2007, 1604.778, 14266000)
+        >>> b.add_yearly_data("1991\\t4.283\\t3280000")
+        >>> c = [b, r]
+        >>> d1 = Country.get_co2_emissions_per_capita_by_year(c,2007)
+        >>> len(d1)
+        2
+        >>> round(d1[r], 5)
+        112.4897
+        
+        >>> round(d1[b], 5)
+        1.29334
+        
+        >>> d2 = Country.get_co2_emissions_per_capita_by_year(c, 10000)
+        >>> print(d2[b])
+        None
+        >>> print(d2[r])
+        None
+        '''
+        dic={}
+        #iterate through countries
+        for country in lis_countries:
+            co2 = country.get_co2_per_capita_by_year(integer)
+            #map the year with the co2 emission
+            dic[country] = co2
+        return dic
+    
+    @staticmethod
+    def get_historical_co2_emissions(lis_countries, integer):
+        '''
+        list, int -> dict
+        
+        This staticmethod takes list of countries and an integer as input,
+        and it returns a dict that map the object of country to the co2
+        produced by the specific country
+        
+        >>> b = Country("ALB", "Albania", ["EUROPE"], 2007, 3.924, 3034000)
+        >>> r = Country("RUS", "Russia", ["ASIA", "EUROPE"], 2007, 1604.778, 14266000)
+        >>> q = Country("QAT", "Qatar", ["ASIA"], 2007, 62.899, 1218000)
+        >>> b.add_yearly_data("1991\\t4.283\\t3280000")
+        >>> q.add_yearly_data("1993\\t30.985\\t501000")
+        >>> q.add_yearly_data("1989\\t14.292\\t462000")
+        >>> c = [b, r, q]
+        >>> d1 = Country.get_historical_co2_emissions(c,2007)
+        >>> len(d1)
+        3
+        >>> round(d1[q], 5)
+        108.176
+        >>> round(d1[r], 5)
+        1604.778
+        >>> round(d1[b], 5)
+        8.207
+        
+        >>> d2 = Country.get_historical_co2_emissions(c, 1991)
+        >>> round(d2[q], 5)
+        14.292
+        >>> round(d2[r], 5)
+        0.0
+        >>> round(d2[b], 5)
+        4.283
+        
+        >>> x = [b, r, q]
+        >>> d3 = Country.get_historical_co2_emissions(x, 1000)
+        >>> round(d3[q], 5)
+        0.0
+        >>> round(d3[r], 5)
+        0.0
+        >>> round(d3[b], 5)
+        0.0
+        '''
+        #create a dic
+        dic ={}
+        #iterate through countries
+        for country in lis_countries:
+            dic[country] = country.get_historical_co2(integer)
+        return dic
+    
+    @staticmethod
+    def get_top_n(dic, int_n):
+        '''
+        dict, int-> list
+        
+        This staticmethod takes dict adn int as input, and returns a list of
+        tuples. The number of tuples should be less or equal to int_n.
+        The tuple is ordered in numeric descending order, or if there is a tie
+        it is in alphabetical order.
+        
+        >>> a = Country("ALB", "Albania", [], 0, 0.0, 0)
+        >>> b = Country("AUT", "Austria", [], 0, 0.0, 0)
+        >>> c = Country("BEL", "Belgium", [], 0, 0.0, 0)
+        >>> d = Country("BOL", "Bolivia", [], 0, 0.0, 0)
+        >>> e = Country("BRA", "Brazil", [], 0, 0.0, 0)
+        >>> f = Country("IRL", "Ireland", [], 0, 0.0, 0)
+        >>> g = Country("MAR", "Marocco", [], 0, 0.0, 0)
+        >>> h = Country("NZL", "New Zealand", [], 0, 0.0, 0)
+        >>> i = Country("PRY", "Paraguay", [], 0, 0.0, 0)
+        >>> j = Country("PER", "Peru", [], 0, 0.0, 0)
+        >>> k = Country("SEN", "Senegal", [], 0, 0.0, 0)
+        >>> l = Country("THA", "Thailand", [], 0, 0.0, 0)
+        >>> dic = {a: 5, b: 5, c: 3, d: 10, e: 3, f: 9, g: 7, h: 8, i: 7, j: 4, k: 6, l: 0}
+        >>> t = Country.get_top_n(dic, 10)
+        >>> t[:5]
+        [('BOL', 10), ('IRL', 9), ('NZL', 8), ('MAR', 7), ('PRY', 7)]
+        >>> t[5:]
+        [('SEN', 6), ('ALB', 5), ('AUT', 5), ('PER', 4), ('BEL', 3)]
+        
+        >>> dic2 = {a: 10, b: 0, c: 9, d: 9, e: 5}
+        >>> t2 = Country.get_top_n(dic2, 5)
+        >>> t2[:5]
+        [('ALB', 10), ('BEL', 9), ('BOL', 9), ('BRA', 5), ('AUT', 0)]
+        
+        >>> dic3 = {a: 10, b: 0, c: 9, d: 9, e: 5}
+        >>> t3 = Country.get_top_n(dic2, 7)
+        >>> t3[:7]
+        [('ALB', 10), ('BEL', 9), ('BOL', 9), ('BRA', 5), ('AUT', 0)]
+        '''
+        #map the name of the country with the number(rank) in the original dict
+        dic_new = {}
+        #map the name of country with its iso code
+        dic_name_ISO ={}
+        for key in dic:
+            dic_name_ISO[key.name] = key.iso_code
+            dic_new[key.name]=dic[key]
+        
+        #create a new list which is mutable with the dict_new
+        #this is a nested list, with the name of the country as first element
+        lis_new = [] 
+        for i in dic_new: 
+            sub_lis = [i, dic_new[i]]
+            lis_new.append(sub_lis)
+        
+        #sort the list with order
+        lis_new.sort()
+        
+        #match the name and the name in the sorted list together
+        #and then change the first element to the iso code of the country
+        for index in lis_new:
+            for name in dic_name_ISO:
+                if index[0] == name:
+                    index[0] = dic_name_ISO[name]
+         
+        #create get_max list, which only contains numeric value in the
+        #original dictionary
+        get_max = []
+        for index in lis_new:
+            get_max.append(index[1])
+        #sort in ascending order
+        get_max.sort()
+        #slice is backward
+        get_max_final = get_max[::-1]
+        
+        #actually it's not the final list, I admit it's a bad name
+        #get the sublist which match to the numeric value in the get_max list
+        #in the order that correspond to the alphabetical and numerical order
+        #after sort the list twice
+        final_list = []
+        for num in get_max_final:
+            for sub_l in lis_new:
+                #get the sublist that match the numeric order
+                if num == sub_l[1]:
+                    final_list.append(sub_l)
+        
+        #since there may have multiple numeric value in the get_max list
+        #which results that there may appear duplicate country in the list
+        #remove all the duplicates
+        remove_duplicate = [] 
+        for ele in final_list: 
+            if ele not in remove_duplicate: 
+                remove_duplicate.append(ele)
+        
+        #covert the nested list after removing the duplicates into tuples
+        conver_to_tup =[]
+        for sub_ele in remove_duplicate:
+            conver_to_tup.append(tuple(sub_ele))
+        
+        #get the top n the input requires
+        #if n is bigger than the len of the final nested list, then
+        #simply returns the list
+        if int_n <=len(dic):
+            get_top_n = conver_to_tup[:int_n]
+        else:
+            get_top_n = conver_to_tup[:]
+ 
+        return get_top_n
+               
+def get_countries_from_file(filename):
+    '''
+    str->dict
+    
+    This function takes the filename in a string and it returns the dict that
+    maps the ISO code to object of type Country.
+    
+    >>> d1 = get_countries_from_file("small_co2_data.tsv")
+    >>> len(d1)
+    9
+    >>> str(d1['COL'])
+    'Colombia\\tSOUTH AMERICA\\t{2015: 93.084, 2001: 56.259}\\t{2015: 47521000, 2001: 39630000}'
+    
+    >>> d2 = get_countries_from_file("large_co2_data.tsv")
+    >>> len(d2)
+    193
+    >>> str(d2['OWID_KOS'])
+    'Kosovo\\tEUROPE\\t{2011: 8.361, 2013: 8.068, 2015: 8.402, 2008: 7.449, 2014: 7.255, 2009: 8.185, 2012: 7.936, 2018: 8.887, 2016: 8.936, 2010: 8.42, 2017: 8.929}\\t{}'
+    
+    >>> d3 = get_countries_from_file("anothertestfinalstep.tsv")
+    >>> len(d3)
+    10
+    >>> str(d3['BHS'])
+    'Bahamas\\tNORTH AMERICA\\t{1960: 0.41}\\t{1960: 110000}'
+    '''
+    #open the file and iterate through the line in the file
+    dic={}
+    fobj = open(filename, "r", encoding ="utf-8-sig")
+    for line in fobj:
+        #get the country object
+        a_country = Country.get_country_from_data(line)
+        
+        #check if the iso is already in the dict
+        ISO = a_country.iso_code
+        if ISO not in dic:
+            dic[ISO] = a_country
+        #if not, then slice the line into the format of year, co2, and pop
+        #which the add_yearly_data will accept
+        else:
+            count = 0
+            for index in range(len(line)):
+                #slice it with "\t"
+                if line[index] == "\t":
+                    count +=1
+                    if count ==3:
+                        break
+            year_co2_pop = line[index+1:]
+            dic[ISO].add_yearly_data(year_co2_pop)
+            
+    #close file, return dict
+    fobj.close()
+    return dic
+ 
+if __name__=="__main__":
+    doctest.testmod()
