@@ -1,0 +1,167 @@
+# A program that contains several functions that clean up the text in .txt
+# file, and write the content into .tsv file. The data is made processible,
+# after the data clean, for later use
+# Author: Sharon (Hetong) Shen
+# ID: 260953511
+import doctest
+def find_delim(string):
+    '''
+    str -> str
+    
+    The function takes a string, and returns the most commonly used delimiter
+    in it. If there is no delimiter, then raise an assertionerror.
+    
+    >>> find_delim("hi lool at 3,4")
+    ' '
+    >>> find_delim("cat\\tdog bat\\tcrab-cod")
+    '\\t'
+    
+    >>> find_delim("cat-dog-ba-tcrab-cod")
+    '-'
+    
+    >>> find_delim("cat?dog?ba?tcrab?cod")
+    Traceback (most recent call last):
+    AssertionError: no delimiter in the string
+    '''
+    #list of delimiter
+    lis_of_delim = ['\t', ',', ' ', '-']
+    #check if there is at least one delimiter in the string
+    count = 0
+    for delim in lis_of_delim:
+        if delim in string:
+            count +=1
+    #if not then raise assertionerror
+    if count == 0:
+        raise AssertionError("no delimiter in the string")
+ 
+    #create a dictionary for those delimiters, with the delimiter as key
+    #and a list as the value, the first value in the list is the num of
+    #appearance of delimiter, the second is the representation of delimiter
+    dic = {"num_spaces":[0,' '],"num_commas":[0,','],"num_dashes":[0,'-'],"num_tabs":[0,'\t']}
+    for key in dic:
+        dic[key][0] = string.count(dic[key][1])
+    
+    #set the max_delimiter as num_space, and compare it with other delimiters
+    max_delim = "num_spaces"
+    for key2 in dic:
+        if dic[key2][0] > dic[max_delim][0]:
+            #see if other's num can override the max_delim
+            #if can, then update it
+            max_delim = key2 
+    return dic[max_delim][1]
+ 
+def clean_one(input_filename, output_filename):
+    '''
+    (str,str) -> int
+    
+    THis function opens the input file, processes it with delimiters, and
+    then write the new content into the newfile with .tsv as its format
+    
+    >>> clean_one('anothertest.txt', 'anotherteststep1.tsv')
+    10
+    >>> clean_one('large_raw_co2_data.txt', 'large_tab_sep_co2_data.tsv')
+    17452
+    >>> clean_one('test.txt', 'teststep1.tsv')
+    6
+    '''
+    #open the file
+    fobj = open(input_filename, "r", encoding ="utf-8-sig")
+    num_line = 0
+    empty  = ''
+    
+    #iterate through the lines in file
+    for line in fobj:
+        num_line +=1
+        #split the lines with delimiter, and then join them again with \t
+        delim = find_delim(line)
+        newline = line.split(delim)
+        newline2 = "\t".join(newline)
+        empty += newline2
+    
+    #write the new content to the new file
+    fobj2 = open(output_filename, "w")
+    fobj2.write(empty)
+    
+    #close the file
+    fobj.close()  
+    fobj2.close()
+    
+    #return the number of lines
+    return num_line
+ 
+def final_clean(input_filename, output_filename):
+    '''
+    (str,str) -> int
+    
+    This function takes two filenames as input. It changes all the lines
+    into a column of five, and then replace all the "," with "." that
+    appears in the digit. The function returns the num of lines written
+    to the new file.
+    
+    >>> final_clean('anotherteststep1.tsv', 'anotherteststep2.tsv')
+    10
+    >>> final_clean('teststep1.tsv', 'teststep2.tsv')
+    6
+    >>> final_clean('large_tab_sep_co2_data.tsv', 'large_clean_co2_data.tsv')
+    17452
+    '''
+    #open the file
+    fobj = open(input_filename, "r", encoding ="utf-8-sig")
+    num_line = 0
+    empty  = ''
+    
+    #iterate through the line in the file
+    for line in fobj:
+        num_line+=1
+        
+        #get the ISO number by defining them as the characters before '\t'
+        for a in range(len(line)):
+            if line[a] == "\t":
+                ISO = line[:a]
+                break
+        
+        #get the country's name by defining them as the characters before year's digit
+        newline = line[a+1:]
+        for i in range(len(newline)):
+            if newline[i] in [str(1), str(2)]:
+                country = newline[:i-1]
+                newline2 = line[a+1+i:]
+                break
+            else:
+                continue
+        #process the country name to check if it is seperated by multiple '\t'
+        #if so, then change them to ' ' 
+        new_country_name = country.split("\t")
+        country_name = " ".join(new_country_name)
+       
+        #get the year with slicing
+        year = newline2[:4]
+        
+        #check if the co2 is originally used "," as "." in the original file
+        #if that's teh case, then after processing the file, it will contain
+        #two "\t" between the digits. Replace all the "," with "."
+        newline3 = line[a+1+5+i:]
+        if newline3.count("\t") ==2:
+            newline5 =newline3.split("\t")
+            line6 =".".join(newline5[:2])
+            co2_pop = "\t".join([line6, newline5[2]])
+        else:
+            co2_pop= newline3.replace(",", ".")
+         
+        #concatenate the strings
+        entire_new_line = ISO +"\t" + country_name +"\t" + year+ "\t"+ co2_pop 
+ 
+        #write the new content to the new file
+        empty  += entire_new_line
+        fobj2 = open(output_filename, "w")
+        fobj2.write(empty)
+    
+    #close the file and return the num_line
+    fobj.close()  
+    fobj2.close()
+    return num_line
+#print(clean_one('1.txt', '12.tsv'))
+#print(final_clean('12.tsv', '123.tsv'))
+ 
+if __name__=="__main__":
+    doctest.testmod()
