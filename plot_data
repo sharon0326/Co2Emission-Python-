@@ -1,7 +1,6 @@
 # A program that contains several functions that helps to create graphs from
 # co2_emissions data of each country
-# Author: Sharon (Hetong) Shen 
-# ID: 260953511
+
 import doctest
 import matplotlib.pyplot as plt
 from add_continents import *
