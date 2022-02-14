@@ -1,8 +1,6 @@
 # A program that contains several functions that clean up the text in .txt
 # file, and write the content into .tsv file. The data is made processible,
 # after the data clean, for later use
-# Author: Sharon (Hetong) Shen
-# ID: 260953511
 import doctest
 def find_delim(string):
     '''
