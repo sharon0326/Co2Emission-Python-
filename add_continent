@@ -1,8 +1,6 @@
 # A program that contains two functions that add the continents to the
 # corresponding country in the given file, and create a dictionary that
 # maps the continents to ISO code
-# Author: Sharon (Hetong) Shen
-# ID: 260953511
 import doctest
 def get_iso_codes_by_continent(continents_filename):
     '''
