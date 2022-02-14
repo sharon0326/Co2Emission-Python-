@@ -2,8 +2,6 @@
 # method that belongs to this class. The module also contains a file-processing
 # function that helps to convert the line in the .tsv file into object of
 # class Country
-# Author: Sharon (Hetong) Shen
-# ID: 260953511
 import doctest
 import copy
  
